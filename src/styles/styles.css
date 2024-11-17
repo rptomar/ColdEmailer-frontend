@@ -1,0 +1,35 @@
+.flowchart-container {
+    height: 600px;
+    width: 100%;
+    border: 1px solid #ccc;
+  }
+  
+  
+  .controls {
+    margin-bottom: 10px;
+  }
+  
+  button {
+    margin-right: 10px;
+    padding: 5px 10px;
+  }
+  
+  .node {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+  }
+  
+  .cold-email {
+    border-color: blue;
+  }
+  
+  .wait-delay {
+    border-color: orange;
+  }
+  
+  .lead-source {
+    border-color: green;
+  }
+  
