@@ -1,6 +1,6 @@
 export const saveFlowchart = async (flowchart) => {
     try {
-      const response = await fetch("http://localhost:5000/api/save-flowchart", {
+      const response = await fetch("https://coldemailer-backend.onrender.com/api/save-flowchart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(flowchart),
