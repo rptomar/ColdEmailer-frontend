@@ -1,41 +1,3 @@
-// import React, { useState } from "react";
-// import ReactFlow, { addEdge, Background, Controls } from "reactflow";
-// import ColdEmailNode from "./nodes/ColdEmailNode";
-// import WaitDelayNode from "./nodes/WaitDelayNode";
-// import LeadSourceNode from "./nodes/LeadSourceNode";
-// import "reactflow/dist/style.css";
-
-// const FlowchartEditor = ({ onSave }) => {
-//   const [nodes, setNodes] = useState([]);
-//   const [edges, setEdges] = useState([]);
-
-//   const onNodesChange = (changes) => setNodes((nds) => changes(nds));
-//   const onEdgesChange = (changes) => setEdges((eds) => changes(eds));
-//   const onConnect = (connection) => setEdges((eds) => addEdge(connection, eds));
-
-//   const handleSave = () => {
-//     onSave({ nodes, edges });
-//   };
-
-//   return (
-//     <div style={{ height: "500px", border: "1px solid #ddd", margin: "20px" }}>
-//       <ReactFlow
-//         nodes={nodes}
-//         edges={edges}
-//         onNodesChange={onNodesChange}
-//         onEdgesChange={onEdgesChange}
-//         onConnect={onConnect}
-//       >
-//         <Background />
-//         <Controls />
-//       </ReactFlow>
-//       <button onClick={handleSave}>Save Flowchart</button>
-//     </div>
-//   );
-// };
-
-// export default FlowchartEditor;
-
 import React, { useCallback } from "react";
 import ReactFlow, {
   MiniMap,
@@ -49,16 +11,19 @@ import "reactflow/dist/style.css";
 import ColdEmailNode from "./nodes/ColdEmailNode";
 import WaitDelayNode from "./nodes/WaitDelayNode";
 import LeadSourceNode from "./nodes/LeadSourceNode";
+import { saveFlowchart } from "../api/flowchartApi";
+import { useNavigate } from "react-router-dom";
+import swal from 'sweetalert';
 
 const nodeTypes = {
   coldEmail: ColdEmailNode,
   waitDelay: WaitDelayNode,
   leadSource: LeadSourceNode,
 };
-const initialNodes = [
-  { id: "1", type: "input", position: { x: 250, y: 100 }, data: { label: "Lead Source" } },
-];
 
+const initialNodes = [
+  { id: "1", type: "leadSource", position: { x: 250, y: 100 }, data: { heading: "Lead Source", text: "" } },
+];
 
 const initialEdges = [];
 
@@ -66,8 +31,10 @@ const FlowchartEditor = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
+  const navigate = useNavigate();
+
   const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge(params, eds)),
+    (params) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
     [setEdges]
   );
 
@@ -77,19 +44,45 @@ const FlowchartEditor = () => {
       id,
       type,
       position: { x: Math.random() * 400, y: Math.random() * 400 },
-      data: { label: `${type} Node` },
+      data: { heading: `${type} Node`, text: "" },
     };
     setNodes((nds) => [...nds, newNode]);
   };
 
-  const handleSave = async () => {
-    const flowchart = { nodes, edges };
-    console.log(flowchart);
-    // Send to backend
+  const handleTextChange = (id, field, value) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === id ? { ...node, data: { ...node.data, [field]: value } } : node
+      )
+    );
   };
-  console.log("Nodes:", nodes);
-console.log("Edges:", edges);
 
+  const handleSave = async () => {
+    const flowchart = {
+      nodes: nodes.map((node) => ({
+        id: node.id,
+        type: node.type,
+        position: node.position,
+        heading: node.data.heading,
+        text: node.data.text,
+      })),
+      edges,
+    };
+    console.log("Saved Flowchart:", flowchart);
+    try {
+        const response = await saveFlowchart(flowchart); // Call your save function
+        if (response.data) {
+          swal("Success", "FlowChart is Saved Successfully", "success").then(() => {
+            navigate("/flowcharts"); // Navigate after successful submission
+          });
+        } else {
+          swal("Error", "Error in saving flowchart", "error");
+        }
+      } catch (error) {
+        console.error("Error saving flowchart:", error);
+        swal("Error", "An unexpected error occurred", "error");
+      }
+    }
 
   return (
     <div className="flowchart-container">
@@ -97,11 +90,17 @@ console.log("Edges:", edges);
         <button onClick={() => addNode("coldEmail")}>Add Cold Email Node</button>
         <button onClick={() => addNode("waitDelay")}>Add Wait/Delay Node</button>
         <button onClick={() => addNode("leadSource")}>Add Lead Source Node</button>
-        <button onClick={handleSave}>Save and shedule Flowchart</button>
+        <button onClick={handleSave}>Save and Schedule Flowchart</button>
       </div>
       <div style={{ height: 500, width: "100%" }}>
         <ReactFlow
-          nodes={nodes}
+          nodes={nodes.map((node) => ({
+            ...node,
+            data: {
+              ...node.data,
+              onTextChange: (field, value) => handleTextChange(node.id, field, value),
+            },
+          }))}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
