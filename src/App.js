@@ -1,13 +1,18 @@
 import React from "react";
-import FlowChart from "./components/Charts";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-function App() {
-  return (
-    <div>
-      <h1>Email Marketing Flowchart</h1>
-      <FlowChart />
-    </div>
-  );
-}
+import Home from "./pages/Home";
+import Flowcharts from "./pages/Flowcharts";
+import ScheduleEmail from "./pages/ScheduleEmail";
+
+const App = () => (
+  <Router>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/flowcharts" element={<Flowcharts />} />
+      <Route path="/schedule" element={<ScheduleEmail />} />
+    </Routes>
+  </Router>
+);
 
 export default App;
